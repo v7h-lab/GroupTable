@@ -3,6 +3,8 @@ import { motion } from 'motion/react';
 import { UtensilsCrossed, DollarSign, ArrowRight } from 'lucide-react';
 import { FilterSection } from './components/filter-section';
 import { LocationSearch } from './components/location-search';
+import { ShareView } from './components/share-view';
+import { Toaster } from 'sonner@2.0.3';
 
 const cuisineOptions = [
   '🍕 Italian',
@@ -33,6 +35,9 @@ const costOptions = [
 ];
 
 export default function App() {
+  const [view, setView] = useState<'filters' | 'share'>('filters');
+  const [shareUrl, setShareUrl] = useState('');
+  
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedCosts, setSelectedCosts] = useState<number[]>([]);
@@ -59,11 +64,30 @@ export default function App() {
     setSelectedLocations(selectedLocations.filter((loc) => loc !== location));
   };
 
+  const handleNext = () => {
+    // Generate a mock unique URL
+    const uniqueId = Math.random().toString(36).substring(2, 8);
+    const url = `https://yelpclone.app/group/${uniqueId}`;
+    setShareUrl(url);
+    setView('share');
+  };
+
   const activeFiltersCount =
     selectedCuisines.length + selectedLocations.length + selectedCosts.length;
 
+  if (view === 'share') {
+    return (
+      <>
+        <Toaster position="top-center" />
+        <ShareView url={shareUrl} onBack={() => setView('filters')} />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
+      <Toaster position="top-center" />
+      
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
         <div className="mx-auto px-4 py-4 max-w-md">
@@ -150,6 +174,7 @@ export default function App() {
           animate={{ y: 0, opacity: 1 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          onClick={handleNext}
           className="pointer-events-auto bg-red-600 text-white px-8 py-4 rounded-full shadow-xl shadow-red-200 flex items-center gap-3 font-semibold text-lg"
         >
           <span>Next</span>
