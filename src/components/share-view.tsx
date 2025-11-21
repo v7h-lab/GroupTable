@@ -8,7 +8,7 @@ import { toast } from 'sonner@2.0.3';
 interface ShareViewProps {
   url: string;
   onBack: () => void;
-  onStartSession: () => void;
+  onStartSession: (participantsCount: number) => void;
 }
 
 export function ShareView({ url, onBack, onStartSession }: ShareViewProps) {
@@ -137,7 +137,7 @@ export function ShareView({ url, onBack, onStartSession }: ShareViewProps) {
           <Button 
              variant="outline"
              className="w-full h-14 text-lg font-semibold border-2 border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200 hover:text-red-700 rounded-xl gap-2"
-             onClick={onStartSession}
+             onClick={() => onStartSession(participants)}
           >
              <Play className="size-5 fill-current" />
              Start Session

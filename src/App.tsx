@@ -4,6 +4,7 @@ import { UtensilsCrossed, DollarSign, ArrowRight } from 'lucide-react';
 import { FilterSection } from './components/filter-section';
 import { LocationSearch } from './components/location-search';
 import { ShareView } from './components/share-view';
+import { WaitingView } from './components/waiting-view';
 import { SwipeView, Restaurant } from './components/swipe-view';
 import { Toaster } from 'sonner@2.0.3';
 
@@ -167,12 +168,13 @@ const mockRestaurants: Restaurant[] = [
 ];
 
 export default function App() {
-  const [view, setView] = useState<'filters' | 'share' | 'swipe'>('filters');
+  const [view, setView] = useState<'filters' | 'share' | 'waiting' | 'swipe'>('filters');
   const [shareUrl, setShareUrl] = useState('');
   
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedCosts, setSelectedCosts] = useState<number[]>([]);
+  const [sessionParticipants, setSessionParticipants] = useState(2);
 
   const toggleFilter = <T extends string | number>(
     value: T,
@@ -202,6 +204,11 @@ export default function App() {
     const url = `https://yelpclone.app/group/${uniqueId}`;
     setShareUrl(url);
     setView('share');
+  };
+
+  const handleStartSession = (count: number) => {
+    setSessionParticipants(count);
+    setView('waiting');
   };
 
   const activeFiltersCount =
@@ -235,7 +242,25 @@ export default function App() {
         <ShareView 
           url={shareUrl} 
           onBack={() => setView('filters')} 
-          onStartSession={() => setView('swipe')}
+          onStartSession={handleStartSession}
+        />
+      </>
+    );
+  }
+
+  if (view === 'waiting') {
+    return (
+      <>
+        <Toaster position="top-center" />
+        <WaitingView 
+          filters={{
+            cuisine: selectedCuisines,
+            location: selectedLocations,
+            cost: selectedCosts
+          }}
+          totalParticipants={sessionParticipants}
+          onStart={() => setView('swipe')}
+          onBack={() => setView('share')}
         />
       </>
     );
