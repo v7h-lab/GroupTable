@@ -13,7 +13,7 @@ interface Review {
 }
 
 export interface Restaurant {
-  id: number;
+  id: number | string;
   name: string;
   cuisine: string;
   location: string;
@@ -73,6 +73,12 @@ export function SwipeView({ restaurants, onBack }: SwipeViewProps) {
     );
   }
 
+  // Helper to determine image source
+  const getImageSrc = (img: string) => {
+    if (img.startsWith('http')) return img;
+    return `https://source.unsplash.com/800x1200/?${img.replace(/\s+/g, ',')}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col overflow-hidden">
       <header className="p-4 flex items-center justify-between relative z-10">
@@ -91,7 +97,7 @@ export function SwipeView({ restaurants, onBack }: SwipeViewProps) {
             key={currentRestaurant.id}
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0, x: 0, rotate: 0 }}
-            exit={{ 
+            exit={{
               x: direction === 'left' ? -500 : direction === 'right' ? 500 : 0,
               opacity: 0,
               rotate: direction === 'left' ? -20 : direction === 'right' ? 20 : 0,
@@ -106,12 +112,12 @@ export function SwipeView({ restaurants, onBack }: SwipeViewProps) {
             <div className="h-full relative">
               {/* Image */}
               <div className="absolute inset-0">
-                 <ImageWithFallback 
-                    src={`https://source.unsplash.com/800x1200/?${currentRestaurant.image.replace(/\s+/g, ',')}`}
-                    alt={currentRestaurant.name}
-                    className="w-full h-full object-cover"
-                 />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <ImageWithFallback
+                  src={getImageSrc(currentRestaurant.image)}
+                  alt={currentRestaurant.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               </div>
 
               {/* Content Overlay */}
@@ -132,7 +138,6 @@ export function SwipeView({ restaurants, onBack }: SwipeViewProps) {
                     {currentRestaurant.location}
                   </div>
                   <div className="flex items-center gap-1">
-                    <DollarSign className="size-4" />
                     {Array(currentRestaurant.cost).fill('$').join('')}
                   </div>
                 </div>
@@ -144,7 +149,7 @@ export function SwipeView({ restaurants, onBack }: SwipeViewProps) {
                     </Badge>
                   ))}
                 </div>
-                
+
                 <div className="mt-4 flex items-center gap-1 text-xs opacity-70">
                   <Info className="size-3" />
                   Tap for details
@@ -163,11 +168,11 @@ export function SwipeView({ restaurants, onBack }: SwipeViewProps) {
           >
             <X className="size-8" />
           </motion.button>
-          
+
           <motion.button
-             whileTap={{ scale: 0.9 }}
-             onClick={(e) => { e.stopPropagation(); handleSwipe('right'); }}
-             className="w-16 h-16 bg-red-600 rounded-full shadow-lg shadow-red-200 text-white flex items-center justify-center hover:bg-red-700 transition-colors"
+            whileTap={{ scale: 0.9 }}
+            onClick={(e) => { e.stopPropagation(); handleSwipe('right'); }}
+            className="w-16 h-16 bg-red-600 rounded-full shadow-lg shadow-red-200 text-white flex items-center justify-center hover:bg-red-700 transition-colors"
           >
             <Heart className="size-8 fill-current" />
           </motion.button>
@@ -184,29 +189,29 @@ export function SwipeView({ restaurants, onBack }: SwipeViewProps) {
           <div className="h-full overflow-y-auto pb-8">
             {/* Header Image */}
             <div className="h-64 relative">
-               <ImageWithFallback 
-                  src={`https://source.unsplash.com/800x600/?${currentRestaurant.image.replace(/\s+/g, ',')}`}
-                  alt={currentRestaurant.name}
-                  className="w-full h-full object-cover"
-               />
-               <Button 
-                 variant="ghost" 
-                 size="icon" 
-                 onClick={() => setShowDetails(false)} 
-                 className="absolute top-4 right-4 bg-black/50 text-white hover:bg-black/70 rounded-full"
-               >
-                 <X className="size-5" />
-               </Button>
+              <ImageWithFallback
+                src={getImageSrc(currentRestaurant.image)}
+                alt={currentRestaurant.name}
+                className="w-full h-full object-cover"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDetails(false)}
+                className="absolute top-4 right-4 bg-black/50 text-white hover:bg-black/70 rounded-full"
+              >
+                <X className="size-5" />
+              </Button>
             </div>
 
             <div className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-2xl font-bold">{currentRestaurant.name}</h2>
                 <Badge variant="outline" className="text-sm">
-                   {Array(currentRestaurant.cost).fill('$').join('')}
+                  {Array(currentRestaurant.cost).fill('$').join('')}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center gap-2 text-gray-600 mb-6">
                 <MapPin className="size-4" />
                 {currentRestaurant.location} • {currentRestaurant.cuisine}
@@ -234,7 +239,7 @@ export function SwipeView({ restaurants, onBack }: SwipeViewProps) {
                       {currentRestaurant.rating} ({currentRestaurant.reviews})
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4">
                     {currentRestaurant.userReviews.map((review, i) => (
                       <div key={i} className="bg-gray-50 p-4 rounded-xl">
@@ -250,21 +255,21 @@ export function SwipeView({ restaurants, onBack }: SwipeViewProps) {
                   </div>
                 </div>
               </div>
-              
+
               <div className="h-24" /> {/* Spacer for bottom buttons */}
             </div>
           </div>
-          
+
           {/* Fixed Bottom Actions */}
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 flex gap-3">
-             <Button variant="outline" className="flex-1 h-12 rounded-xl gap-2" onClick={() => { setShowDetails(false); handleSwipe('left'); }}>
-               <X className="size-4" />
-               Reject
-             </Button>
-             <Button className="flex-1 h-12 rounded-xl gap-2 bg-red-600 hover:bg-red-700" onClick={() => { setShowDetails(false); handleSwipe('right'); }}>
-               <Heart className="size-4" />
-               Like
-             </Button>
+            <Button variant="outline" className="flex-1 h-12 rounded-xl gap-2" onClick={() => { setShowDetails(false); handleSwipe('left'); }}>
+              <X className="size-4" />
+              Reject
+            </Button>
+            <Button className="flex-1 h-12 rounded-xl gap-2 bg-red-600 hover:bg-red-700" onClick={() => { setShowDetails(false); handleSwipe('right'); }}>
+              <Heart className="size-4" />
+              Like
+            </Button>
           </div>
         </SheetContent>
       </Sheet>

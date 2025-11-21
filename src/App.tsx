@@ -6,7 +6,8 @@ import { LocationSearch } from './components/location-search';
 import { ShareView } from './components/share-view';
 import { WaitingView } from './components/waiting-view';
 import { SwipeView, Restaurant } from './components/swipe-view';
-import { Toaster } from 'sonner@2.0.3';
+import { Toaster, toast } from 'sonner';
+import { fetchRestaurants } from './services/yelp-api';
 
 const cuisineOptions = [
   '🍕 Italian',
@@ -170,7 +171,7 @@ const mockRestaurants: Restaurant[] = [
 export default function App() {
   const [view, setView] = useState<'filters' | 'share' | 'waiting' | 'swipe'>('filters');
   const [shareUrl, setShareUrl] = useState('');
-  
+
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedCosts, setSelectedCosts] = useState<number[]>([]);
@@ -198,6 +199,12 @@ export default function App() {
     setSelectedLocations(selectedLocations.filter((loc) => loc !== location));
   };
 
+  const [fetchedRestaurants, setFetchedRestaurants] = useState<Restaurant[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // ... existing toggleFilter, addLocation, removeLocation ...
+
   const handleNext = () => {
     // Generate a mock unique URL
     const uniqueId = Math.random().toString(36).substring(2, 8);
@@ -206,31 +213,51 @@ export default function App() {
     setView('share');
   };
 
-  const handleStartSession = (count: number) => {
+  const handleStartSession = async (count: number) => {
     setSessionParticipants(count);
     setView('waiting');
+
+    // Trigger API call
+    setIsLoading(true);
+    setError(null);
+    try {
+      const results = await fetchRestaurants({
+        cuisines: selectedCuisines,
+        locations: selectedLocations,
+        costs: selectedCosts
+      });
+      setFetchedRestaurants(results);
+      if (results.length === 0) {
+        toast.info('No specific matches found, showing recommendations.');
+      }
+    } catch (err) {
+      console.error('Failed to fetch restaurants', err);
+      setError('Failed to load recommendations. Showing sample data.');
+      toast.error('Failed to connect to Yelp AI. Using sample data.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const activeFiltersCount =
     selectedCuisines.length + selectedLocations.length + selectedCosts.length;
 
-  // Filter restaurants based on selection for the swipe view
-  // If no filters are selected, show all
-  const filteredRestaurants = mockRestaurants.filter(restaurant => {
-    // Parse cuisine from the restaurant string (e.g. "🍜 Asian") vs selected (e.g. "Asian")
-    // The mock data has clean strings "Asian", "Italian" etc. 
-    // The options have emojis "🍜 Asian". We need to match these.
-    
-    // Simple match: check if any selected cuisine string contains the restaurant cuisine
-    const matchesCuisine = selectedCuisines.length === 0 || selectedCuisines.some(c => c.includes(restaurant.cuisine));
-    
-    // Location match (exact or partial since options are cities)
-    const matchesLocation = selectedLocations.length === 0 || selectedLocations.some(l => restaurant.location.includes(l) || l.includes(restaurant.location));
-    
-    const matchesCost = selectedCosts.length === 0 || selectedCosts.includes(restaurant.cost);
-    
-    return matchesCuisine && matchesLocation && matchesCost;
-  });
+  // Use fetched restaurants if available, otherwise filter mock data as fallback
+  // If API was called and returned results, use them.
+  // If API failed or hasn't been called yet (and we are somehow in swipe view), use mock.
+  const restaurantsToUse = fetchedRestaurants.length > 0 ? fetchedRestaurants : mockRestaurants;
+
+  // Filter restaurants based on selection for the swipe view (only if using mock data or client-side filtering desired)
+  // Since API handles filtering, we might just use the results directly.
+  // But if we fallback to mock, we still want to filter.
+  const filteredRestaurants = restaurantsToUse === mockRestaurants
+    ? mockRestaurants.filter(restaurant => {
+      const matchesCuisine = selectedCuisines.length === 0 || selectedCuisines.some(c => c.includes(restaurant.cuisine));
+      const matchesLocation = selectedLocations.length === 0 || selectedLocations.some(l => restaurant.location.includes(l) || l.includes(restaurant.location));
+      const matchesCost = selectedCosts.length === 0 || selectedCosts.includes(restaurant.cost);
+      return matchesCuisine && matchesLocation && matchesCost;
+    })
+    : restaurantsToUse;
 
   // If filtering results in 0, show all (fallback) so the swipe view isn't empty
   const restaurantsToSwipe = filteredRestaurants.length > 0 ? filteredRestaurants : mockRestaurants;
@@ -239,9 +266,9 @@ export default function App() {
     return (
       <>
         <Toaster position="top-center" />
-        <ShareView 
-          url={shareUrl} 
-          onBack={() => setView('filters')} 
+        <ShareView
+          url={shareUrl}
+          onBack={() => setView('filters')}
           onStartSession={handleStartSession}
         />
       </>
@@ -252,7 +279,7 @@ export default function App() {
     return (
       <>
         <Toaster position="top-center" />
-        <WaitingView 
+        <WaitingView
           filters={{
             cuisine: selectedCuisines,
             location: selectedLocations,
@@ -270,9 +297,9 @@ export default function App() {
     return (
       <>
         <Toaster position="top-center" />
-        <SwipeView 
-          restaurants={restaurantsToSwipe} 
-          onBack={() => setView('filters')} 
+        <SwipeView
+          restaurants={restaurantsToSwipe}
+          onBack={() => setView('filters')}
         />
       </>
     );
@@ -281,7 +308,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <Toaster position="top-center" />
-      
+
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
         <div className="mx-auto px-4 py-4 max-w-md">
@@ -294,7 +321,7 @@ export default function App() {
                 Yelp<span className="text-red-600">Clone</span>
               </h1>
             </div>
-            
+
             {activeFiltersCount > 0 && (
               <motion.button
                 initial={{ scale: 0 }}
@@ -344,11 +371,10 @@ export default function App() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => toggleFilter(option.value, selectedCosts, setSelectedCosts)}
-                  className={`px-2 py-3 rounded-xl transition-all ${
-                    selectedCosts.includes(option.value)
-                      ? 'bg-red-600 text-white shadow-lg shadow-red-200'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                  }`}
+                  className={`px-2 py-3 rounded-xl transition-all ${selectedCosts.includes(option.value)
+                    ? 'bg-red-600 text-white shadow-lg shadow-red-200'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
                 >
                   <div className="flex flex-col items-center gap-1">
                     <span className="font-medium">{option.label}</span>
