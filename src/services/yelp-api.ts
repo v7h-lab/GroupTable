@@ -128,13 +128,22 @@ export async function fetchRestaurants(preferences: UserPreferences): Promise<Re
 
       // Map reviews
       const reviews = [];
-      if (b.review_snippet) {
-        reviews.push({
-          user: 'Yelp Reviewer',
-          rating: b.rating || 5,
-          text: b.review_snippet.text || b.review_snippet
-        });
+      if (b.review_snippets && Array.isArray(b.review_snippets)) {
+        reviews.push(...b.review_snippets.slice(0, 2).map((snippet: any) => ({
+          user: snippet.user?.name || 'Anonymous',
+          rating: snippet.rating || 5,
+          text: snippet.text || ''
+        })));
       }
+
+      // Extract image URL from contextual_info.photos or fallback to image_url
+      let imageUrl = b.image_url;
+      if (!imageUrl && b.contextual_info?.photos && b.contextual_info.photos.length > 0) {
+        imageUrl = b.contextual_info.photos[0].original_url;
+      }
+
+      // Log image URL for debugging
+      console.log(`Restaurant: ${b.name}, Image URL: ${imageUrl || 'NO IMAGE URL - using fallback'}`);
 
       return {
         id: b.id || `yelp-${index}`,
@@ -144,10 +153,13 @@ export async function fetchRestaurants(preferences: UserPreferences): Promise<Re
         cost: cost,
         rating: b.rating || 0,
         reviews: b.review_count || 0,
-        image: b.image_url || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80', // Fallback image
+        image: imageUrl || `https://source.unsplash.com/800x600/?${encodeURIComponent(b.categories?.[0]?.title || 'restaurant')}`,
         tags: b.categories?.map((c: any) => c.title).slice(0, 3) || [],
-        topDishes: [], // API might not return this directly in the business object, leaving empty for now
-        userReviews: reviews
+        topDishes: [],
+        userReviews: reviews,
+        // Add extra details if the interface supports it (we might need to update Restaurant interface)
+        phone: b.display_phone || b.phone || 'No phone available',
+        is_closed: b.is_closed
       };
     });
 

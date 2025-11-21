@@ -220,6 +220,7 @@ export default function App() {
     // Trigger API call
     setIsLoading(true);
     setError(null);
+    setFetchedRestaurants([]); // Clear previous results to avoid stale data
     try {
       const results = await fetchRestaurants({
         cuisines: selectedCuisines,
@@ -300,6 +301,7 @@ export default function App() {
         <SwipeView
           restaurants={restaurantsToSwipe}
           onBack={() => setView('filters')}
+          onMatch={(restaurant) => toast.success(`Matched with ${restaurant.name}!`)}
         />
       </>
     );
