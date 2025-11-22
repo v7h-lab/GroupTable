@@ -14,6 +14,7 @@ export interface Restaurant {
   rating: number;
   reviews: number;
   image: string;
+  additionalImages?: string[]; // Additional photos from the API
   tags: string[];
   topDishes: string[];
   userReviews: {
@@ -177,6 +178,13 @@ export function SwipeView({ restaurants, onMatch, onBack }: SwipeViewProps) {
                 </Button>
               </div>
 
+              {/* Short Summary for Card View */}
+              {currentRestaurant.shortSummary && (
+                <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
+                  {currentRestaurant.shortSummary}
+                </p>
+              )}
+
               <div className="flex flex-wrap gap-2">
                 {currentRestaurant.tags?.map(tag => (
                   <span key={tag} className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
@@ -199,10 +207,14 @@ export function SwipeView({ restaurants, onMatch, onBack }: SwipeViewProps) {
         </Button>
         <Button
           size="lg"
-          className="size-16 rounded-full bg-red-500 text-white shadow-lg shadow-red-200 hover:bg-red-600 hover:scale-110 transition-all"
+          variant="ghost"
+          style={{ backgroundColor: '#ef4444' }}
+          className="size-16 rounded-full text-white shadow-lg shadow-red-200 hover:scale-110 transition-all hover:text-white"
           onClick={() => handleSwipe('right')}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
         >
-          <Heart className="size-8 fill-current" />
+          <Heart className="size-8 fill-white" />
         </Button>
       </div>
 
@@ -241,35 +253,53 @@ export function SwipeView({ restaurants, onMatch, onBack }: SwipeViewProps) {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold mb-2">About</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  A popular {currentRestaurant.cuisine.toLowerCase()} restaurant in {currentRestaurant.location}.
-                  {currentRestaurant.reviews > 0 && ` Rated ${currentRestaurant.rating} stars based on ${currentRestaurant.reviews} reviews.`}
+                  {currentRestaurant.longSummary || (
+                    <>
+                      A popular {currentRestaurant.cuisine.toLowerCase()} restaurant in {currentRestaurant.location}.
+                      {currentRestaurant.reviews > 0 && ` Rated ${currentRestaurant.rating} stars based on ${currentRestaurant.reviews} reviews.`}
+                    </>
+                  )}
                 </p>
               </div>
 
-              {currentRestaurant.userReviews?.length > 0 && (
+              {currentRestaurant.additionalImages && currentRestaurant.additionalImages.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold">Photos</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {currentRestaurant.additionalImages.map((imgUrl, idx) => (
+                      <div key={idx} className="relative aspect-square rounded-lg overflow-hidden">
+                        <ImageWithFallback
+                          src={imgUrl}
+                          alt={`${currentRestaurant.name} - Photo ${idx + 2}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {currentRestaurant.userReviews && currentRestaurant.userReviews.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <Star className="size-5 fill-yellow-400 text-yellow-400" />
-                    Customer Reviews ({currentRestaurant.userReviews.length})
+                    Top Reviews ({currentRestaurant.userReviews.length})
                   </h3>
+
+                  {/* Vertically Stacked Review Cards */}
                   <div className="space-y-3">
-                    {currentRestaurant.userReviews.map((review, i) => (
-                      <div key={i} className="bg-gradient-to-br from-gray-50 to-white border border-gray-100 p-4 rounded-xl shadow-sm">
-                        <div className="flex justify-between items-start mb-3">
+                    {currentRestaurant.userReviews.map((review, idx) => (
+                      <div key={idx} className="bg-gradient-to-br from-gray-50 to-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
                           <div>
-                            <span className="font-semibold text-gray-900">{review.user}</span>
-                            <div className="flex items-center gap-1 mt-1">
-                              {Array(5).fill(0).map((_, starIdx) => (
-                                <Star
-                                  key={starIdx}
-                                  className={`size-4 ${starIdx < review.rating ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'}`}
-                                />
-                              ))}
-                              <span className="text-sm text-gray-500 ml-1">{review.rating}/5</span>
-                            </div>
+                            <span className="font-semibold text-gray-900">
+                              {review.user}
+                            </span>
                           </div>
                         </div>
-                        <p className="text-gray-700 text-sm leading-relaxed">{review.text}</p>
+                        <p className="text-gray-700 text-sm leading-relaxed">
+                          {review.text}
+                        </p>
                       </div>
                     ))}
                   </div>
