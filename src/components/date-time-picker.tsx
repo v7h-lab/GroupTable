@@ -75,27 +75,23 @@ export function DateTimePicker({ date, time, onDateChange, onTimeChange }: DateT
                                 <Clock className="size-4 text-gray-400 shrink-0" />
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 overflow-hidden" align="start">
-                            <div className="max-h-80 overflow-y-scroll rounded-md bg-white" style={{ scrollbarWidth: 'thin' }}>
-                                <div className="p-1">
-                                    {timeOptions.map((option) => (
-                                        <button
-                                            key={option}
-                                            onClick={() => {
-                                                onTimeChange(option);
-                                                setIsOpen(false);
-                                            }}
-                                            className={cn(
-                                                "w-full text-left px-3 py-3 text-sm rounded-lg transition-colors flex items-center justify-between",
-                                                time === option ? "bg-red-50 text-red-700 font-medium" : "hover:bg-gray-100 text-gray-900"
-                                            )}
-                                        >
-                                            {option}
-                                            {time === option && <Check className="size-4 text-red-600" />}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1 rounded-md bg-white" align="start" style={{ scrollbarWidth: 'thin', maxHeight: '240px', overflowY: 'auto' }}>
+                            {timeOptions.map((option) => (
+                                <button
+                                    key={option}
+                                    onClick={() => {
+                                        onTimeChange(option);
+                                        setIsOpen(false);
+                                    }}
+                                    className={cn(
+                                        "w-full text-left px-3 py-3 text-sm rounded-lg transition-colors flex items-center justify-between",
+                                        time === option ? "bg-red-50 text-red-700 font-medium" : "hover:bg-gray-100 text-gray-900"
+                                    )}
+                                >
+                                    {option}
+                                    {time === option && <Check className="size-4 text-red-600" />}
+                                </button>
+                            ))}
                         </PopoverContent>
                     </Popover>
                 </div>
