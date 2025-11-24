@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react@0.487.0";
-import { DayPicker } from "react-day-picker@8.10.1";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { DayPicker, useNavigation } from "react-day-picker";
 
 import { cn } from "./utils";
-import { buttonVariants } from "./button";
+import { buttonVariants, Button } from "./button";
 
 function Calendar({
   className,
@@ -22,13 +22,13 @@ function Calendar({
         month: "flex flex-col gap-4",
         caption: "flex justify-center pt-1 relative items-center w-full",
         caption_label: "text-sm font-medium",
-        nav: "flex items-center gap-1",
+        nav: "flex items-center justify-between absolute inset-0 w-full px-1",
         nav_button: cn(
-          buttonVariants({ variant: "outline" }),
+          buttonVariants({ variant: "ghost" }),
           "size-7 bg-transparent p-0 opacity-50 hover:opacity-100",
         ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
+        nav_button_previous: "",
+        nav_button_next: "",
         table: "w-full border-collapse space-x-1",
         head_row: "flex",
         head_cell:
@@ -60,12 +60,18 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ className, ...props }) => (
-          <ChevronLeft className={cn("size-4", className)} {...props} />
-        ),
-        IconRight: ({ className, ...props }) => (
-          <ChevronRight className={cn("size-4", className)} {...props} />
-        ),
+        IconLeft: () => {
+          const { currentMonth } = useNavigation();
+          const now = new Date();
+          const isCurrentMonth =
+            currentMonth &&
+            currentMonth.getMonth() === now.getMonth() &&
+            currentMonth.getFullYear() === now.getFullYear();
+
+          // Only show if not current month
+          return !isCurrentMonth ? <ChevronLeft className="size-4" /> : null;
+        },
+        IconRight: () => <ChevronRight className="size-4" />,
       }}
       {...props}
     />
