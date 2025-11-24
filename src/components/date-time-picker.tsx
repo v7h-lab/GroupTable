@@ -32,12 +32,12 @@ export function DateTimePicker({ date, time, onDateChange, onTimeChange }: DateT
                 <div className="bg-red-600 p-1.5 rounded-lg">
                     <CalendarIcon className="size-4 text-white" />
                 </div>
-                <span className="font-semibold text-gray-900">When?</span>
+                <span className="font-semibold text-gray-900">When? <span className="text-red-600">*</span></span>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-gray-500 ml-1">Date</label>
+                    <label className="text-xs font-medium text-gray-500 ml-1">Date <span className="text-red-600">*</span></label>
                     <Popover>
                         <PopoverTrigger asChild>
                             <button
@@ -48,7 +48,11 @@ export function DateTimePicker({ date, time, onDateChange, onTimeChange }: DateT
                                 )}
                             >
                                 <span className="truncate">
-                                    {date ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "Select date"}
+                                    {date ? (() => {
+                                        const [year, month, day] = date.split('-').map(Number);
+                                        const localDate = new Date(year, month - 1, day);
+                                        return localDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                    })() : "Select date"}
                                 </span>
                                 <CalendarIcon className="size-4 text-gray-400 shrink-0" />
                             </button>
@@ -56,7 +60,10 @@ export function DateTimePicker({ date, time, onDateChange, onTimeChange }: DateT
                         <PopoverContent className="w-auto p-0 bg-white" align="start">
                             <Calendar
                                 mode="single"
-                                selected={date ? new Date(date) : undefined}
+                                selected={date ? (() => {
+                                    const [year, month, day] = date.split('-').map(Number);
+                                    return new Date(year, month - 1, day);
+                                })() : undefined}
                                 onSelect={(newDate) => {
                                     if (newDate) {
                                         const year = newDate.getFullYear();
@@ -75,7 +82,7 @@ export function DateTimePicker({ date, time, onDateChange, onTimeChange }: DateT
                 </div>
 
                 <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-gray-500 ml-1">Time</label>
+                    <label className="text-xs font-medium text-gray-500 ml-1">Time <span className="text-red-600">*</span></label>
                     <Popover open={isOpen} onOpenChange={setIsOpen}>
                         <PopoverTrigger asChild>
                             <button

@@ -216,7 +216,12 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
 
   const handleNextStep = () => {
+    // Validate step 1 requirements
     if (filterStep === 1) {
+      if (!selectedDate || !selectedTime || selectedLocations.length === 0) {
+        toast.error('Please select date, time, and at least one location');
+        return;
+      }
       setFilterStep(2);
     } else {
       // Generate a mock unique URL
@@ -307,8 +312,17 @@ export default function App() {
           }}
           date={selectedDate}
           time={selectedTime}
+          rating={selectedRating}
           totalParticipants={sessionParticipants}
-          onStart={() => setView('swipe')}
+          isLoading={isLoading}
+          onStart={() => {
+            // Only transition to swipe view if data is ready
+            if (!isLoading && (fetchedRestaurants.length > 0 || error)) {
+              setView('swipe');
+            } else if (isLoading) {
+              toast.info('Loading restaurants, please wait...');
+            }
+          }}
           onBack={() => setView('share')}
         />
       </>
@@ -482,10 +496,14 @@ export default function App() {
         <motion.button
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: filterStep === 1 && (!selectedDate || !selectedTime || selectedLocations.length === 0) ? 1 : 1.05 }}
+          whileTap={{ scale: filterStep === 1 && (!selectedDate || !selectedTime || selectedLocations.length === 0) ? 1 : 0.95 }}
           onClick={handleNextStep}
-          className="pointer-events-auto bg-red-600 text-white px-8 py-4 rounded-full shadow-xl shadow-red-200 flex items-center gap-3 font-semibold text-lg"
+          disabled={filterStep === 1 && (!selectedDate || !selectedTime || selectedLocations.length === 0)}
+          className={`pointer-events-auto px-8 py-4 rounded-full shadow-xl flex items-center gap-3 font-semibold text-lg transition-all ${filterStep === 1 && (!selectedDate || !selectedTime || selectedLocations.length === 0)
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-gray-200'
+              : 'bg-red-600 text-white shadow-red-200 hover:bg-red-700'
+            }`}
         >
           <span>{filterStep === 1 ? 'Next' : 'Next'}</span>
           <ArrowRight className="size-5" />

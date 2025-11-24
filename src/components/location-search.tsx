@@ -57,7 +57,7 @@ export function LocationSearch({
         <div className="bg-red-600 p-1.5 rounded-lg">
           <MapPin className="size-4 text-white" />
         </div>
-        <span className="font-semibold text-gray-900">Location</span>
+        <span className="font-semibold text-gray-900">Location <span className="text-red-600">*</span></span>
       </div>
 
       {/* Search Input */}

@@ -22,10 +22,10 @@ function Calendar({
         month: "flex flex-col gap-4",
         caption: "flex justify-center pt-1 relative items-center w-full",
         caption_label: "text-sm font-medium",
-        nav: "flex items-center justify-between absolute inset-0 w-full px-1",
+        nav: "flex items-center justify-between absolute inset-0 w-full px-1 pointer-events-none",
         nav_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "size-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+          "size-7 bg-transparent p-0 opacity-50 hover:opacity-100 pointer-events-auto",
         ),
         nav_button_previous: "",
         nav_button_next: "",
