@@ -93,14 +93,14 @@ export function WaitingView({ filters, date, time, rating, totalParticipants, is
   }, [canStart]);
 
   return (
-    <div className="h-[100dvh] w-full bg-gray-50 flex flex-col overflow-hidden">
+    <div className="min-h-[100dvh] h-[100dvh] w-full bg-gray-50 flex flex-col overflow-hidden">
       <header className="p-4 shrink-0">
         <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full hover:bg-gray-100">
           <ArrowLeft className="size-6 text-gray-600" />
         </Button>
       </header>
 
-      <main className="flex-1 flex flex-col px-4 pb-4 max-w-md mx-auto w-full overflow-y-auto">
+      <main className="flex-1 flex flex-col px-4 pb-4 max-w-md mx-auto w-full overflow-y-auto min-h-0">
         <div className="text-center mb-4 shrink-0">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             {joinedCount < totalParticipants
@@ -277,7 +277,7 @@ export function WaitingView({ filters, date, time, rating, totalParticipants, is
         </div>
 
         {/* Bottom Action */}
-        <div className="mt-auto">
+        <div className="mt-auto px-4 py-4">
           {/* Progress Bar */}
           {joinedCount < totalParticipants && (
             <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden mb-6">
