@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { UtensilsCrossed, DollarSign, ArrowRight, ArrowLeft } from 'lucide-react';
+import { UtensilsCrossed, DollarSign, ArrowRight, ArrowLeft, Star } from 'lucide-react';
 import { FilterSection } from './components/filter-section';
 import { LocationSearch } from './components/location-search';
 import { DateTimePicker } from './components/date-time-picker';
@@ -36,6 +36,13 @@ const costOptions = [
   { label: '$$', value: 2, desc: 'Moderate' },
   { label: '$$$', value: 3, desc: 'Pricey' },
   { label: '$$$$', value: 4, desc: 'Luxury' },
+];
+
+const ratingOptions = [
+  { label: 'Any', value: 0 },
+  { label: '3.5+', value: 3.5 },
+  { label: '4.0+', value: 4.0 },
+  { label: '4.5+', value: 4.5 },
 ];
 
 const mockRestaurants: Restaurant[] = [
@@ -179,6 +186,7 @@ export default function App() {
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedCosts, setSelectedCosts] = useState<number[]>([]);
+  const [selectedRating, setSelectedRating] = useState<number>(0);
   const [sessionParticipants, setSessionParticipants] = useState(2);
 
   const toggleFilter = <T extends string | number>(
@@ -208,7 +216,12 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
 
   const handleNextStep = () => {
+    // Validate step 1 requirements
     if (filterStep === 1) {
+      if (!selectedDate || !selectedTime || selectedLocations.length === 0) {
+        toast.error('Please select date, time, and at least one location');
+        return;
+      }
       setFilterStep(2);
     } else {
       // Generate a mock unique URL
@@ -238,6 +251,7 @@ export default function App() {
         cuisines: selectedCuisines,
         locations: selectedLocations,
         costs: selectedCosts,
+        minRating: selectedRating > 0 ? selectedRating : undefined,
         date: selectedDate,
         time: selectedTime
       });
@@ -255,7 +269,7 @@ export default function App() {
   };
 
   const activeFiltersCount =
-    selectedCuisines.length + selectedLocations.length + selectedCosts.length;
+    selectedCuisines.length + selectedLocations.length + selectedCosts.length + (selectedRating > 0 ? 1 : 0);
 
   // Use fetched restaurants if available, otherwise filter mock data as fallback
   const restaurantsToUse = fetchedRestaurants.length > 0 ? fetchedRestaurants : mockRestaurants;
@@ -266,7 +280,8 @@ export default function App() {
       const matchesCuisine = selectedCuisines.length === 0 || selectedCuisines.some(c => c.includes(restaurant.cuisine));
       const matchesLocation = selectedLocations.length === 0 || selectedLocations.some(l => restaurant.location.includes(l) || l.includes(restaurant.location));
       const matchesCost = selectedCosts.length === 0 || selectedCosts.includes(restaurant.cost);
-      return matchesCuisine && matchesLocation && matchesCost;
+      const matchesRating = selectedRating === 0 || restaurant.rating >= selectedRating;
+      return matchesCuisine && matchesLocation && matchesCost && matchesRating;
     })
     : restaurantsToUse;
 
@@ -297,8 +312,17 @@ export default function App() {
           }}
           date={selectedDate}
           time={selectedTime}
+          rating={selectedRating}
           totalParticipants={sessionParticipants}
-          onStart={() => setView('swipe')}
+          isLoading={isLoading}
+          onStart={() => {
+            // Only transition to swipe view if data is ready
+            if (!isLoading && (fetchedRestaurants.length > 0 || error)) {
+              setView('swipe');
+            } else if (isLoading) {
+              toast.info('Loading restaurants, please wait...');
+            }
+          }}
           onBack={() => setView('share')}
         />
       </>
@@ -312,7 +336,10 @@ export default function App() {
         <SwipeView
           restaurants={restaurantsToSwipe}
           onBack={() => setView('filters')}
-          onMatch={(restaurant) => toast.success(`Matched with ${restaurant.name}!`)}
+          onMatch={(restaurant) => {
+            // toast.success(`Matched with ${restaurant.name}!`); // Disabled for now, can be re-enabled later
+          }}
+          participants={sessionParticipants}
         />
       </>
     );
@@ -323,8 +350,14 @@ export default function App() {
       <Toaster position="top-center" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-        <div className="mx-auto px-4 py-4 max-w-md">
+      <header
+        className={`sticky top-0 z-50 ${view === 'share' ? '' : 'bg-white border-b border-gray-200 shadow-sm'}`}
+        style={view === 'share' ? { backgroundColor: '#ffffff00' } : undefined}
+      >
+        <div
+          className="mx-auto px-4 py-4 max-w-md"
+          style={view === 'share' ? { backgroundColor: '#ffffff00' } : undefined}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="bg-red-600 p-2 rounded-xl">
@@ -335,16 +368,20 @@ export default function App() {
               </h1>
             </div>
 
-            {activeFiltersCount > 0 && (
+            {(filterStep === 1 ? (selectedDate || selectedTime || selectedLocations.length > 0) : (selectedCuisines.length > 0 || selectedCosts.length > 0 || selectedRating > 0)) && (
               <motion.button
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 onClick={() => {
-                  setSelectedCuisines([]);
-                  setSelectedLocations([]);
-                  setSelectedCosts([]);
-                  setSelectedDate('');
-                  setSelectedTime('');
+                  if (filterStep === 1) {
+                    setSelectedDate('');
+                    setSelectedTime('');
+                    setSelectedLocations([]);
+                  } else {
+                    setSelectedCuisines([]);
+                    setSelectedCosts([]);
+                    setSelectedRating(0);
+                  }
                 }}
                 className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
               >
@@ -390,7 +427,35 @@ export default function App() {
                 options={cuisineOptions}
                 selected={selectedCuisines}
                 onToggle={(value) => toggleFilter(value, selectedCuisines, setSelectedCuisines)}
+                limit={12}
               />
+
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="bg-red-600 p-1.5 rounded-lg">
+                    <Star className="size-4 text-white" />
+                  </div>
+                  <span className="font-semibold text-gray-900">Minimum Rating</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {ratingOptions.map((option) => (
+                    <motion.button
+                      key={option.value}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setSelectedRating(option.value)}
+                      className={`px-2 py-3 rounded-xl transition-all ${selectedRating === option.value
+                        ? 'bg-red-600 text-white shadow-lg shadow-red-200'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        }`}
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="font-medium">{option.label}</span>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
 
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                 <div className="flex items-center gap-2 mb-3">
@@ -443,10 +508,14 @@ export default function App() {
         <motion.button
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: filterStep === 1 && (!selectedDate || !selectedTime || selectedLocations.length === 0) ? 1 : 1.05 }}
+          whileTap={{ scale: filterStep === 1 && (!selectedDate || !selectedTime || selectedLocations.length === 0) ? 1 : 0.95 }}
           onClick={handleNextStep}
-          className="pointer-events-auto bg-red-600 text-white px-8 py-4 rounded-full shadow-xl shadow-red-200 flex items-center gap-3 font-semibold text-lg"
+          disabled={filterStep === 1 && (!selectedDate || !selectedTime || selectedLocations.length === 0)}
+          className={`pointer-events-auto px-8 py-4 rounded-full shadow-xl flex items-center gap-3 font-semibold text-lg transition-all ${filterStep === 1 && (!selectedDate || !selectedTime || selectedLocations.length === 0)
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-gray-200'
+            : 'bg-red-600 text-white shadow-red-200 hover:bg-red-700'
+            }`}
         >
           <span>{filterStep === 1 ? 'Next' : 'Next'}</span>
           <ArrowRight className="size-5" />

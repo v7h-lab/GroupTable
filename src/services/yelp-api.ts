@@ -9,6 +9,7 @@ interface UserPreferences {
   costs: number[];
   date?: string;
   time?: string;
+  minRating?: number;
 }
 
 interface YelpBusiness {
@@ -63,7 +64,11 @@ export async function fetchRestaurants(preferences: UserPreferences): Promise<Re
     ? `with a price range of ${preferences.costs.map(c => '$'.repeat(c)).join(' or ')}`
     : '';
 
-  const query = `Recommend popular ${cuisineStr} restaurants ${locationStr} ${costStr} with reviews.`;
+  const ratingStr = preferences.minRating
+    ? `with a rating of at least ${preferences.minRating} stars`
+    : '';
+
+  const query = `Recommend popular ${cuisineStr} restaurants ${locationStr} ${costStr} ${ratingStr} with reviews.`;
 
   console.log('Yelp API Request:', { url: YELP_API_URL, query, apiKeyPresent: !!YELP_API_KEY });
 

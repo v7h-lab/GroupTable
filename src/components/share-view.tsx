@@ -27,8 +27,8 @@ export function ShareView({ url, onBack, onStartSession }: ShareViewProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <header className="p-4 sticky top-0 bg-white z-10">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <header className="p-4 sticky top-0 z-10" style={{ backgroundColor: 'transparent' }}>
         <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full hover:bg-gray-100">
           <ArrowLeft className="size-6 text-gray-600" />
         </Button>
@@ -44,16 +44,16 @@ export function ShareView({ url, onBack, onStartSession }: ShareViewProps) {
             <Users className="size-16 text-red-600" />
           </div>
           <motion.div
-             animate={{ rotate: 360 }}
-             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-             className="absolute inset-0 border-2 border-dashed border-red-200 rounded-full scale-150"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0 border-2 border-dashed border-red-200 rounded-full scale-150"
           />
           <div className="absolute -right-2 -bottom-2 bg-green-500 p-2 rounded-full border-4 border-white z-20 shadow-sm">
-             <Check className="size-4 text-white" />
+            <Check className="size-4 text-white" />
           </div>
         </motion.div>
 
-        <motion.h2 
+        <motion.h2
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
@@ -61,8 +61,8 @@ export function ShareView({ url, onBack, onStartSession }: ShareViewProps) {
         >
           Share with friends
         </motion.h2>
-        
-        <motion.p 
+
+        <motion.p
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -71,17 +71,17 @@ export function ShareView({ url, onBack, onStartSession }: ShareViewProps) {
           Send this link to your group to start voting on where to eat!
         </motion.p>
 
-        <motion.div 
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
           className="w-full space-y-4"
         >
           <div className="relative">
-            <Input 
-              value={url} 
-              readOnly 
-              className="pr-12 h-14 text-lg bg-gray-50 border-gray-200 text-gray-600" 
+            <Input
+              value={url}
+              readOnly
+              className="pr-12 h-14 text-lg bg-gray-50 border-gray-200 text-gray-600"
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2">
               <Button
@@ -95,14 +95,14 @@ export function ShareView({ url, onBack, onStartSession }: ShareViewProps) {
             </div>
           </div>
 
-          <Button 
+          <Button
             className="w-full h-14 text-lg font-semibold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-200 rounded-xl gap-2"
             onClick={handleCopy}
           >
             <Share2 className="size-5" />
             {copied ? 'Copied Link!' : 'Copy Link'}
           </Button>
-          
+
           {/* Spacer with no OR */}
           <div className="h-4" />
 
@@ -113,9 +113,9 @@ export function ShareView({ url, onBack, onStartSession }: ShareViewProps) {
               <span className="font-medium">Group Size</span>
             </div>
             <div className="flex items-center gap-4 bg-white rounded-lg p-1 border border-gray-200 shadow-sm">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="h-8 w-8 rounded-md hover:bg-gray-100"
                 onClick={() => setParticipants(Math.max(2, participants - 1))}
                 disabled={participants <= 2}
@@ -123,9 +123,9 @@ export function ShareView({ url, onBack, onStartSession }: ShareViewProps) {
                 <Minus className="size-4" />
               </Button>
               <span className="font-bold w-4 text-center text-gray-900">{participants}</span>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="h-8 w-8 rounded-md hover:bg-gray-100"
                 onClick={() => setParticipants(participants + 1)}
               >
@@ -134,13 +134,13 @@ export function ShareView({ url, onBack, onStartSession }: ShareViewProps) {
             </div>
           </div>
 
-          <Button 
-             variant="outline"
-             className="w-full h-14 text-lg font-semibold border-2 border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200 hover:text-red-700 rounded-xl gap-2"
-             onClick={() => onStartSession(participants)}
+          <Button
+            variant="outline"
+            className="w-full h-14 text-lg font-semibold border-2 border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200 hover:text-red-700 rounded-xl gap-2"
+            onClick={() => onStartSession(participants)}
           >
-             <Play className="size-5 fill-current" />
-             Start Session
+            <Play className="size-5 fill-current" />
+            Start Session
           </Button>
         </motion.div>
       </main>
