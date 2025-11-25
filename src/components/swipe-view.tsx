@@ -4,6 +4,7 @@ import { X, Heart, Star, MapPin, DollarSign, Info, ArrowLeft, Phone, Check } fro
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from './ui/sheet';
+import { Participant } from './waiting-view';
 
 export interface Restaurant {
   id: number | string;
@@ -59,9 +60,10 @@ interface SwipeViewProps {
   onMatch: (restaurant: Restaurant) => void;
   onBack: () => void;
   participants: number;
+  users?: Participant[];
 }
 
-export function SwipeView({ restaurants, onMatch, onBack, participants }: SwipeViewProps) {
+export function SwipeView({ restaurants, onMatch, onBack, participants, users }: SwipeViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -140,28 +142,35 @@ export function SwipeView({ restaurants, onMatch, onBack, participants }: SwipeV
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="min-h-screen bg-red-600 flex flex-col items-center justify-center p-6 text-center z-50 fixed inset-0"
+        className="h-[100dvh] bg-red-600 flex flex-col items-center justify-center p-6 text-center z-50 fixed inset-0"
       >
         <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden flex flex-col">
           <div className="pt-8 pb-4 px-8 flex flex-col items-center">
-            <div className="h-9 w-full" />
-            <div
-              className="rounded-full flex items-center justify-center mx-auto mb-4 shrink-0 animate-bounce"
-              style={{ width: '5rem', height: '5rem', backgroundColor: '#fee2e2' }}
-            >
-              <Heart className="size-10 text-red-600 fill-red-600" />
+            <div className="h-4 w-full" />
+            <div className="flex items-center justify-center gap-3 mb-4 mr-8">
+              <div
+                className="rounded-full flex items-center justify-center shrink-0 animate-bounce"
+                style={{ width: '3.5rem', height: '3.5rem', backgroundColor: '#fee2e2' }}
+              >
+                <Heart className="size-8 text-red-600 fill-red-600" />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900">It's a Match!</h2>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-1">It's a Match!</h2>
           </div>
 
           {/* Hero Image with Details Overlay */}
-          <div className="relative h-64 w-full shrink-0 group">
+          <div className="relative w-full shrink-0 group" style={{ height: '8rem' }}>
             <ImageWithFallback
               src={matchedRestaurant?.image || ''}
               alt={matchedRestaurant?.name || ''}
               className="w-full h-full object-cover object-center"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0) 100%)',
+              }}
+            />
 
             <div className="absolute bottom-0 left-0 right-0 p-6 text-white text-left">
               <h3 className="text-2xl font-bold mb-2">{matchedRestaurant?.name}</h3>
@@ -187,18 +196,24 @@ export function SwipeView({ restaurants, onMatch, onBack, participants }: SwipeV
                 <Check className="size-3" /> Everyone wants to go here
               </span>
               <div className="flex -space-x-2 overflow-hidden">
-                {Array.from({ length: Math.min(participants, 4) }).map((_, i) => (
-                  <div key={i} className={`inline-flex h-10 w-10 rounded-full ring-2 ring-white items-center justify-center text-xs font-bold text-gray-600 ${['bg-gray-100', 'bg-gray-200', 'bg-gray-300', 'bg-gray-400'][i % 4]
-                    }`}>
-                    {['AL', 'SA', 'YO', 'MI'][i % 4]}
-                  </div>
-                ))}
-                {participants > 4 && (
-                  <div className="inline-flex h-10 w-10 rounded-full ring-2 ring-white bg-gray-50 items-center justify-center text-xs font-bold text-gray-400">
-                    +{participants - 4}
-                  </div>
-                )}
+                {(users && users.length > 0 ? users : Array.from({ length: Math.min(participants, 4) })).slice(0, 4).map((user, i) => {
+                  const initials = (user as Participant)?.initials || ['AL', 'SA', 'YO', 'MI'][i % 4];
+                  return (
+                    <div
+                      key={i}
+                      className="inline-flex h-10 w-10 rounded-full ring-2 ring-white items-center justify-center text-xs font-bold text-gray-600"
+                      style={{ backgroundColor: ['#f3f4f6', '#e5e7eb', '#d1d5db', '#9ca3af'][i % 4] }}
+                    >
+                      {initials}
+                    </div>
+                  );
+                })}
               </div>
+              {participants > 4 && (
+                <div className="text-xs text-gray-500 font-medium pl-1">
+                  +{participants - 4} more
+                </div>
+              )}
             </div>
 
             {/* Actions */}

@@ -5,7 +5,7 @@ import { FilterSection } from './components/filter-section';
 import { LocationSearch } from './components/location-search';
 import { DateTimePicker } from './components/date-time-picker';
 import { ShareView } from './components/share-view';
-import { WaitingView } from './components/waiting-view';
+import { WaitingView, Participant } from './components/waiting-view';
 import { SwipeView, Restaurant } from './components/swipe-view';
 import { Toaster, toast } from 'sonner';
 import { fetchRestaurants } from './services/yelp-api';
@@ -211,6 +211,7 @@ export default function App() {
     setSelectedLocations(selectedLocations.filter((loc) => loc !== location));
   };
 
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [fetchedRestaurants, setFetchedRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -226,7 +227,7 @@ export default function App() {
     } else {
       // Generate a mock unique URL
       const uniqueId = Math.random().toString(36).substring(2, 8);
-      const url = `https://yelpclone.app/group/${uniqueId}`;
+      const url = `https://yelpmatch.app/group/${uniqueId}`;
       setShareUrl(url);
       setView('share');
     }
@@ -315,7 +316,8 @@ export default function App() {
           rating={selectedRating}
           totalParticipants={sessionParticipants}
           isLoading={isLoading}
-          onStart={() => {
+          onStart={(participantsList) => {
+            setParticipants(participantsList);
             // Only transition to swipe view if data is ready
             if (!isLoading && (fetchedRestaurants.length > 0 || error)) {
               setView('swipe');
@@ -339,7 +341,8 @@ export default function App() {
           onMatch={(restaurant) => {
             // toast.success(`Matched with ${restaurant.name}!`); // Disabled for now, can be re-enabled later
           }}
-          participants={sessionParticipants}
+          participants={participants.length > 0 ? participants.length : sessionParticipants}
+          users={participants}
         />
       </>
     );
@@ -364,7 +367,7 @@ export default function App() {
                 <UtensilsCrossed className="size-6 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-                Yelp<span className="text-red-600">Clone</span>
+                Yelp<span className="text-red-600">Match</span>
               </h1>
             </div>
 
