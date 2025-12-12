@@ -4,3 +4,8 @@ node_modules
 dist
 build
 .gemini
+
+# Project Documentation
+features_to_implement.md
+submissionrequirement.md
+app_review.md
