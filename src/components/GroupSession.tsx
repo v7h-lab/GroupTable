@@ -9,6 +9,7 @@ import { Toaster, toast } from 'sonner';
 import { fetchRestaurants } from '../services/yelp-api';
 import { motion } from 'motion/react';
 import { Star, MapPin, Phone, Globe, Clock, CheckCircle, ArrowLeft } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 // Mock Reservation Page Component
 function ReservationView({ restaurant, onBack, groupSize, time, date }: { restaurant: Restaurant, onBack: () => void, groupSize?: number, time?: string, date?: string }) {
@@ -26,7 +27,7 @@ function ReservationView({ restaurant, onBack, groupSize, time, date }: { restau
 
             {/* Main Card */}
             <div className="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden">
-                <div className="relative h-56">
+                <div className="relative" style={{ height: '200px' }}>
                     <img src={restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6">
                         <h1 className="text-3xl font-bold text-white leading-tight">{restaurant.name}</h1>
@@ -118,6 +119,8 @@ function RankedListView({ restaurants, votes, onBack }: { restaurants: Restauran
     );
 }
 
+
+
 export default function GroupSession() {
     const { sessionId } = useParams<{ sessionId: string }>();
     const navigate = useNavigate();
@@ -128,6 +131,31 @@ export default function GroupSession() {
     const [match, setMatch] = useState<Restaurant | null>(null);
     const [showRanked, setShowRanked] = useState(false);
     const [viewReservation, setViewReservation] = useState<Restaurant | null>(null);
+    const hasCelebratedRef = useRef(false);
+
+    // Trigger confetti on match
+    useEffect(() => {
+        if (sessionData?.status === 'matched' && match && !hasCelebratedRef.current) {
+            hasCelebratedRef.current = true;
+            const duration = 3 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+            const interval: any = setInterval(function () {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * (timeLeft / duration);
+                confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+                confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+            }, 250);
+        }
+    }, [sessionData?.status, match]);
 
     // Listen to session updates
     useEffect(() => {
@@ -499,7 +527,7 @@ export default function GroupSession() {
                     <p className="text-gray-500 mb-6 text-sm">Everyone wants to go to...</p>
 
                     <div className="rounded-2xl overflow-hidden mb-4 shadow-md">
-                        <img src={match.image} alt={match.name} className="w-full h-40 object-cover" />
+                        <img src={match.image} alt={match.name} className="w-full object-cover" style={{ height: '180px' }} />
                         <div className="p-3 bg-gray-50">
                             <h2 className="font-bold text-lg">{match.name}</h2>
                             <p className="text-sm text-gray-500">{match.cuisine} • {match.location}</p>
