@@ -2,7 +2,7 @@ import { Restaurant } from '../components/swipe-view';
 
 // Use Netlify function for production, direct API for local development
 const isDevelopment = import.meta.env.DEV;
-const YELP_API_KEY = import.meta.env.VITE_YELP_API_KEY;
+const YELP_API_KEY = import.meta.env.DEV ? import.meta.env.VITE_YELP_API_KEY : '';
 const YELP_API_URL = isDevelopment
   ? 'https://api.yelp.com/ai/chat/v2'
   : '/.netlify/functions/yelp-proxy';
