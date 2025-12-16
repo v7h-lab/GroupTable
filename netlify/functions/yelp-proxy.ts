@@ -45,11 +45,18 @@ export const handler: Handler = async (event) => {
             },
             body: JSON.stringify(data)
         };
-    } catch (error) {
-        console.error('Error calling Yelp API:', error);
+    } catch (error: any) {
+        console.error('Error calling Yelp API:', {
+            message: error.message,
+            stack: error.stack,
+            response: error.response // If it's an axios error or similar
+        });
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Internal server error' })
+            body: JSON.stringify({
+                error: 'Internal server error',
+                details: error.message
+            })
         };
     }
 };
