@@ -4,7 +4,7 @@
 
 GroupTable (formerly YelpMatch) solves the "where should we eat?" dilemma by combining a Tinder-like swipe interface with real-time group collaboration and Yelp's powerful AI recommendations.
 
-🔗 **[Live Demo](https://fabulous-smakager-c0d743.netlify.app/)**
+🔗 **[Live Demo]**
 
 ![GroupTable Hero Image](public/screenshots/dine%20hero.png)
 
