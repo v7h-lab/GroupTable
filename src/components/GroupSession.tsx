@@ -12,7 +12,7 @@ import { Star, MapPin, Phone, Globe, Clock, CheckCircle, ArrowLeft } from 'lucid
 import confetti from 'canvas-confetti';
 
 // Mock Reservation Page Component
-function ReservationView({ restaurant, onBack, groupSize, time, date }: { restaurant: Restaurant, onBack: () => void, groupSize?: number, time?: string, date?: string }) {
+function ReservationView({ restaurant, onBack, groupSize, time, date, isHost }: { restaurant: Restaurant, onBack: () => void, groupSize?: number, time?: string, date?: string, isHost: boolean }) {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center p-4 pt-6">
             {/* Top Nav Area */}
@@ -52,7 +52,7 @@ function ReservationView({ restaurant, onBack, groupSize, time, date }: { restau
                             <div className="bg-red-50 p-2 rounded-full shrink-0">
                                 <Globe className="text-red-600 size-5" />
                             </div>
-                            <a href="#" className="underline font-medium hover:text-red-600">Visit Website</a>
+                            <a href={restaurant.url || '#'} target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-red-600">Visit Website</a>
                         </div>
                         <div className="flex items-center gap-3 text-gray-700">
                             <div className="bg-red-50 p-2 rounded-full shrink-0">
@@ -79,9 +79,11 @@ function ReservationView({ restaurant, onBack, groupSize, time, date }: { restau
                             </div>
                         </div>
 
-                        <button className="w-full bg-red-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-red-200 hover:bg-red-700 transition-colors">
-                            Book Table
-                        </button>
+                        {isHost && (
+                            <button className="w-full bg-red-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-red-200 hover:bg-red-700 transition-colors">
+                                Book Table
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -90,7 +92,7 @@ function ReservationView({ restaurant, onBack, groupSize, time, date }: { restau
 }
 
 // Ranked List Component
-function RankedListView({ restaurants, votes, onBack }: { restaurants: Restaurant[], votes: Record<string, string[]>, onBack: () => void }) {
+function RankedListView({ restaurants, votes, onBack, onSelect }: { restaurants: Restaurant[], votes: Record<string, string[]>, onBack: () => void, onSelect: (r: Restaurant) => void }) {
     // Calculate top 3
     const ranked = restaurants.map(r => ({
         ...r,
@@ -104,7 +106,7 @@ function RankedListView({ restaurants, votes, onBack }: { restaurants: Restauran
             <h1 className="text-2xl font-bold text-gray-900 mb-6">Top Picks</h1>
             <div className="space-y-4">
                 {ranked.map((r, index) => (
-                    <div key={r.id} className="bg-white p-4 rounded-2xl shadow-sm flex gap-4 items-center">
+                    <div key={r.id} onClick={() => onSelect(r)} className="bg-white p-4 rounded-2xl shadow-sm flex gap-4 items-center cursor-pointer hover:bg-gray-50 transition-colors">
                         <div className="font-bold text-2xl text-gray-300">#{index + 1}</div>
                         <img src={r.image} alt={r.name} className="w-16 h-16 rounded-xl object-cover" />
                         <div className="flex-1">
@@ -131,29 +133,62 @@ export default function GroupSession() {
     const [match, setMatch] = useState<Restaurant | null>(null);
     const [showRanked, setShowRanked] = useState(false);
     const [viewReservation, setViewReservation] = useState<Restaurant | null>(null);
+    const [swipeIndex, setSwipeIndex] = useState(0);
     const hasCelebratedRef = useRef(false);
+
+    // Reset swipe index when restaurant list changes (e.g. Load More)
+    const firstRestaurantId = restaurants[0]?.id;
+    useEffect(() => {
+        if (firstRestaurantId) {
+            setSwipeIndex(0);
+        }
+    }, [firstRestaurantId]);
+
+    // Trigger confetti on match
+    const previousStatusRef = useRef<string | null>(null);
 
     // Trigger confetti on match
     useEffect(() => {
-        if (sessionData?.status === 'matched' && match && !hasCelebratedRef.current) {
-            hasCelebratedRef.current = true;
-            const duration = 3 * 1000;
-            const animationEnd = Date.now() + duration;
-            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+        if (!sessionData) return;
 
-            const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+        // Initial load
+        if (previousStatusRef.current === null) {
+            previousStatusRef.current = sessionData.status;
+            return;
+        }
 
-            const interval: any = setInterval(function () {
-                const timeLeft = animationEnd - Date.now();
+        // Check for transition to matched
+        if (sessionData.status === 'matched') {
+            // Only fire if we weren't matched before (live transition)
+            if (previousStatusRef.current !== 'matched') {
+                if (match && !hasCelebratedRef.current) {
+                    hasCelebratedRef.current = true;
+                    const duration = 3 * 1000;
+                    const animationEnd = Date.now() + duration;
+                    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
-                if (timeLeft <= 0) {
-                    return clearInterval(interval);
+                    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+                    const interval: any = setInterval(function () {
+                        const timeLeft = animationEnd - Date.now();
+
+                        if (timeLeft <= 0) {
+                            return clearInterval(interval);
+                        }
+
+                        const particleCount = 50 * (timeLeft / duration);
+                        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+                        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+                    }, 250);
+
+                    // Update status after firing
+                    previousStatusRef.current = 'matched';
                 }
-
-                const particleCount = 50 * (timeLeft / duration);
-                confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-                confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-            }, 250);
+            }
+        } else {
+            // Update status and reset celebration flag if not matched
+            previousStatusRef.current = sessionData.status;
+            hasCelebratedRef.current = false;
         }
     }, [sessionData?.status, match]);
 
@@ -506,6 +541,7 @@ export default function GroupSession() {
                 groupSize={sessionData.groupSize}
                 time={sessionData.filters.time}
                 date={sessionData.filters.date}
+                isHost={isHost}
             />
         );
     }
@@ -561,7 +597,7 @@ export default function GroupSession() {
     }
 
     if (showRanked) {
-        return <RankedListView restaurants={restaurants} votes={sessionData?.votes || {}} onBack={() => navigate('/')} />;
+        return <RankedListView restaurants={restaurants} votes={sessionData?.votes || {}} onBack={() => navigate('/')} onSelect={(r) => setViewReservation(r)} />;
     }
 
     if (sessionData?.status === 'waiting') {
@@ -617,7 +653,7 @@ export default function GroupSession() {
                     {ranked
                         .filter(r => r.voteCount > 0) // Only show if at least 1 vote
                         .map((r, index) => (
-                            <div key={r.id} className="bg-gray-50 p-3 rounded-xl flex gap-3 items-center text-left">
+                            <div key={r.id} onClick={() => setViewReservation(r)} className="bg-gray-50 p-3 rounded-xl flex gap-3 items-center text-left cursor-pointer hover:bg-gray-100 transition-colors">
                                 <div className="font-bold text-lg text-gray-400">#{index + 1}</div>
                                 <img src={r.image} alt={r.name} className="w-12 h-12 rounded-lg object-cover" />
                                 <div className="flex-1 min-w-0">
@@ -651,6 +687,9 @@ export default function GroupSession() {
                     onFinished={handleUserFinished}
                     waitingForOthers={waitingForOthers}
                     isLoadingMore={sessionData.lastAction?.type === 'loadingMore'}
+                    currentIndex={swipeIndex}
+                    onIndexChange={setSwipeIndex}
+                    allFinished={allFinished}
                 />
             </>
         );

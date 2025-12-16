@@ -314,7 +314,8 @@ export async function fetchRestaurants(preferences: UserPreferences): Promise<Re
         display_phone: b.phone, // Use raw phone if display_phone not available
         is_closed: false, // Default to open if not specified
         shortSummary: b.summaries?.short,
-        longSummary: b.summaries?.long
+        longSummary: b.summaries?.long,
+        url: b.url
       };
     });
 

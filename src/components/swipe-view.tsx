@@ -28,6 +28,7 @@ export interface Restaurant {
   is_closed?: boolean;
   shortSummary?: string;
   longSummary?: string;
+  url?: string;
 }
 
 function ImageWithFallback({ src, alt, className }: { src: string, alt: string, className?: string }) {
@@ -59,21 +60,39 @@ function ImageWithFallback({ src, alt, className }: { src: string, alt: string, 
 
 interface SwipeViewProps {
   restaurants: Restaurant[];
-  onMatch: (restaurant: Restaurant) => void;
   onBack: () => void;
+  onMatch: (restaurant: Restaurant) => void;
   participants: number;
-  users?: Participant[];
+  users: Participant[];
   extraContent?: React.ReactNode;
   onReserve?: (restaurant: Restaurant) => void;
-  isHost?: boolean;
+  isHost: boolean;
   onLoadMore?: () => void;
   onFinished?: () => void;
   waitingForOthers?: boolean;
   isLoadingMore?: boolean;
+  allFinished: boolean;
+  currentIndex: number;
+  onIndexChange: (index: number) => void;
 }
 
-export function SwipeView({ restaurants, onMatch, onBack, participants, users, extraContent, onReserve, isHost, onLoadMore, onFinished, waitingForOthers, isLoadingMore }: SwipeViewProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+export function SwipeView({
+  restaurants,
+  onBack,
+  onMatch,
+  participants,
+  users,
+  extraContent,
+  onReserve,
+  isHost,
+  onLoadMore,
+  onFinished,
+  waitingForOthers,
+  isLoadingMore,
+  allFinished,
+  currentIndex,
+  onIndexChange
+}: SwipeViewProps) {
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
@@ -84,15 +103,8 @@ export function SwipeView({ restaurants, onMatch, onBack, participants, users, e
   // We now rely solely on the firstId check below to reset index on new lists
 
   // Also watch for explicit list replacements (checking first ID)
-  const firstId = restaurants[0]?.id;
-  useEffect(() => {
-    if (firstId) {
-      // If we are already at 0, no need to reset. 
-      // If we are deep in the list, and the list changes (new first ID), reset.
-      // Note: This might reset if we just refresh, but local state resets anyway.
-      setCurrentIndex(0);
-    }
-  }, [firstId]);
+  // Removed index reset logic to prevent resetting when navigating back from reservation view
+  // Parent component (GroupSession) handles index resets when list changes
 
   const currentRestaurant = restaurants[currentIndex];
 
@@ -111,7 +123,7 @@ export function SwipeView({ restaurants, onMatch, onBack, participants, users, e
       if (dir === 'right') {
         onMatch(currentRestaurant);
       }
-      setCurrentIndex((prev) => prev + 1);
+      onIndexChange(currentIndex + 1);
       setDirection(null);
     }, 200);
   };
@@ -152,14 +164,14 @@ export function SwipeView({ restaurants, onMatch, onBack, participants, users, e
               ? "Hang tight! The host is finding more great spots for you..."
               : waitingForOthers
                 ? "Sit tight! We'll let you know when everyone has finished voting."
-                : isHost
+                : isHost && allFinished
                   ? "You've viewed all the restaurants. Try loading more options."
                   : "Waiting for host to continue or end session"}
           </p>
 
           {extraContent}
 
-          {!waitingForOthers && isHost && (
+          {!waitingForOthers && isHost && allFinished && (
             <>
               {onLoadMore && (
                 <Button onClick={onLoadMore} className="w-full h-12 rounded-xl mt-4 bg-red-600 hover:bg-red-700 text-white font-semibold">
